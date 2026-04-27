@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Registration System</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    margin: 0;
+    padding: 0;
+  }
+
+  .container {
+    max-width: 500px;
+    margin: 30px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+
+  button {
+    width: 100%;
+    padding: 10px;
+    background: #4facfe;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  button:hover {
+    background: #007bff;
+  }
+
+  .error {
+    color: red;
+    font-size: 13px;
+  }
+
+  .success {
+    color: green;
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  .seat-box {
+    background: #f1f1f1;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  table {
+    margin-top: 15px;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 8px;
+    text-align: center;
+  }
+
+  th {
+    background: #4facfe;
+    color: white;
+  }
+
+  @media(max-width: 500px) {
+    .container {
+      margin: 10px;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🎉 Event Registration</h2>
+
+  <div class="seat-box">
+    Seats Left: <span id="seats">50</span>
+  </div>
+
+  <form id="form">
+
+    <input type="text" id="name" placeholder="Full Name">
+    <div class="error" id="nameError"></div>
+
+    <input type="email" id="email" placeholder="Email">
+    <div class="error" id="emailError"></div>
+
+    <input type="tel" id="phone" placeholder="Phone Number">
+    <div class="error" id="phoneError"></div>
+
+    <select id="event">
+      <option value="">Select Event</option>
+      <option value="Workshop">Workshop</option>
+      <option value="Seminar">Seminar</option>
+      <option value="Hackathon">Hackathon</option>
+    </select>
+    <div class="error" id="eventError"></div>
+
+    <input type="number" id="tickets" placeholder="Number of Seats">
+    <div class="error" id="ticketError"></div>
+
+    <button type="submit">Register</button>
+
+  </form>
+
+  <div class="success" id="successMsg"></div>
+
+  <h3>Registered Participants</h3>
+  <p>Total Registered: <span id="count">0</span></p>
+
+  <table border="1" width="100%" id="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Event</th>
+        <th>Seats</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+</div>
+
+<script>
+let totalSeats = 50;
+let stored = JSON.parse(localStorage.getItem("registrations")) || [];
+
+// Update seats
+function updateSeats() {
+  let used = stored.reduce((sum, r) => sum + r.tickets, 0);
+  document.getElementById("seats").innerText = totalSeats - used;
+}
+
+// Display registrations
+function displayRegistrations() {
+  let tableBody = document.querySelector("#table tbody");
+  tableBody.innerHTML = "";
+
+  stored.forEach(user => {
+    let row = `
+      <tr>
+        <td>${user.name}</td>
+        <td>${user.email}</td>
+        <td>${user.event}</td>
+        <td>${user.tickets}</td>
+      </tr>
+    `;
+    tableBody.innerHTML += row;
+  });
+
+  document.getElementById("count").innerText = stored.length;
+}
+
+// Initial load
+updateSeats();
+displayRegistrations();
+
+// Form submit
+document.getElementById("form").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  // Clear errors
+  document.querySelectorAll(".error").forEach(e => e.innerText = "");
+  document.getElementById("successMsg").innerText = "";
+
+  let name = document.getElementById("name").value.trim();
+  let email = document.getElementById("email").value.trim();
+  let phone = document.getElementById("phone").value.trim();
+  let event = document.getElementById("event").value;
+  let tickets = parseInt(document.getElementById("tickets").value);
+
+  let isValid = true;
+
+  // Validation
+  if (name.length < 3) {
+    document.getElementById("nameError").innerText = "Enter valid name";
+    isValid = false;
+  }
+
+  if (!email.includes("@")) {
+    document.getElementById("emailError").innerText = "Invalid email";
+    isValid = false;
+  }
+
+  if (!/^[0-9]{10}$/.test(phone)) {
+    document.getElementById("phoneError").innerText = "Enter 10 digit number";
+    isValid = false;
+  }
+
+  if (event === "") {
+    document.getElementById("eventError").innerText = "Select event";
+    isValid = false;
+  }
+
+  if (!tickets || tickets <= 0) {
+    document.getElementById("ticketError").innerText = "Enter valid seats";
+    isValid = false;
+  }
+
+  let seatsLeft = parseInt(document.getElementById("seats").innerText);
+
+  if (tickets > seatsLeft) {
+    document.getElementById("ticketError").innerText = "Not enough seats!";
+    isValid = false;
+  }
+
+  if (!isValid) return;
+
+  try {
+    stored.push({ name, email, phone, event, tickets });
+    localStorage.setItem("registrations", JSON.stringify(stored));
+
+    updateSeats();
+    displayRegistrations();
+
+    document.getElementById("successMsg").innerText =
+      "✅ Registration Successful!";
+
+    document.getElementById("form").reset();
+
+  } catch (error) {
+    document.getElementById("successMsg").innerText =
+      "❌ Error occurred!";
+  }
+});
+</script>
+
+</body>
+</html>
