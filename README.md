@@ -27,11 +27,6 @@ This is a simple web-based event registration system built using HTML, CSS, and 
 Users fill the form → Data is validated → Stored in localStorage → Seats update → Participants list displayed.
 
 
-🌐 Live Demo
-
-https://github.com/ayishayashiram-del/Event-registration-system.git
-
-
 📂 Files
 
 - index.html
